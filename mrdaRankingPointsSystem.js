@@ -41,17 +41,17 @@ class MrdaTeam {
 
 
 function ratioCap(ratio) {
-//    if (ratio > config.ratio_cap)
-//        return config.ratio_cap;
-//    if (ratio < 1/config.ratio_cap)
-//        return 1/config.ratio_cap;
-//    return ratio;
-
-    if (ratio > 3)
-        return 3;
-    if (ratio < .33)
-        return .33;
+    if (ratio > config.ratio_cap)
+        return config.ratio_cap;
+    if (ratio < 1/config.ratio_cap)
+        return 1/config.ratio_cap;
     return ratio;
+
+//    if (ratio > 3)
+//        return 3;
+//    if (ratio < .33)
+//        return .33;
+//    return ratio;
 }
 
 function getStandardDateString(date) {
@@ -137,8 +137,18 @@ class MrdaRankingPointsSystem {
                 if (finalCalc) {
                     if (game.championship && ageDays >= 183) {
                         //championships do not count for active status past 6 months
+
+                        //depricate playoffs per Active Status logic for final calculation. 
+                        //Playoffs are last season, anything else in the rankings period is regular season.
+                        if (finalCalc)
+                            return;
                     } else if (game.qualifier && ageDays >= 271) {
                         //qualifiers do not count for active status past 9 months
+                        
+                        //depricate playoffs per Active Status logic for final calculation.
+                        //Playoffs are last season, anything else in the rankings period is regular season.
+                        if (finalCalc)
+                            return;
                     } else if (game.forfeit 
                         && ((game.scores[game.homeTeamId] > 0 && game.homeTeamId == teamId) 
                         || (game.scores[game.awayTeamId] > 0 && game.awayTeamId == teamId))) {
@@ -153,14 +163,15 @@ class MrdaRankingPointsSystem {
 
                 let gameRankingPoints = game.rankingPoints[teamId];
                 let weight = 1;
-                if (new Date(game.date).getFullYear() < new Date(finalCalcDate).getFullYear())
-                    weight = 0.1;
+                //if (new Date(game.date).getFullYear() < new Date(finalCalcDate).getFullYear())
+                //    weight = 0.1;
 
-                //if (183 <= ageDays && ageDays < 270) {
-                //    weight = 0.5;
-                //} else if (271 <= ageDays && ageDays < 365) {
-                //    weight = 0.25;
-                //}
+                if (183 <= ageDays && ageDays < 270) {
+                    weight = 0.5;
+                } else if (271 <= ageDays && ageDays < 365) {
+                    weight = 0.25;
+                }
+
                 weightedGameRankingPoints.push({"gameRankingPoints": gameRankingPoints, "weight": weight});
             });
             if(weightedGameRankingPoints.length) {
@@ -176,11 +187,12 @@ class MrdaRankingPointsSystem {
     updateRankings(groupedApiGames, calcDate) {        
         groupedApiGames.forEach((gameGroup, sanctioningId) => {
             let playingTeamIds = [];
+            let eventStartDate = null;
             let eventEndDate = null;
 
             gameGroup.forEach(game => {
                 if (daysDiff(game.date, calcDate) >= 0) {
-                    this.calculateGameRankingPoints(game)
+                    if (!eventStartDate) eventStartDate = game.date;
                     eventEndDate = game.date;
                     if (!playingTeamIds.includes(game.homeTeamId)) 
                         playingTeamIds.push(game.homeTeamId);
@@ -189,8 +201,8 @@ class MrdaRankingPointsSystem {
                     }
             });
 
-            //Calculate for everyone every gameday because that's what MBD currently does.
-            playingTeamIds = null;
+            this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds, calcDate);
+            gameGroup.forEach(game => this.calculateGameRankingPoints(game)); 
             this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds, calcDate);
         });
     }
