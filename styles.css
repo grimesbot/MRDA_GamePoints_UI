@@ -1,0 +1,10 @@
+.dt-teamDetailsClick {
+    cursor: pointer;
+}
+
+table.dataTable.display tbody tr.child {
+    background: white;
+}
+table.dataTable.display tbody tr table tr:hover {
+    background: none;
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MRDA Game Points UI</title>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <h1 style="text-align: center">MRDA Rankings by Average Rankings Points</h1>
+    <select name="date" id="date" style="display: block; margin: 0 auto;"></select>
+    <table id="mrdaRankingPoints" class="display" width="100%"></table>
+    <div id="teamDetailContent" hidden>
+        <div style="padding-left: 5%; padding-right: 5%">
+            <h2 id="teamId-title" style="text-align: center"></h2>
+            <h3 style="text-align: center">Current Average Ranking Points: <span id="teamId-averageRankingPoints"></span></h3>
+            <canvas id="teamId-chart"></canvas>
+            <table id="teamId-games" class="display" width="100%"></table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <script src="config.js"></script>    
+    <script src="teamInfo.js"></script>
+    <script src="gameHistory.js"></script>
+    <script src="apiTeamsGames.js"></script>    
+    <script src="mrdaRankingPointsSystem.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
