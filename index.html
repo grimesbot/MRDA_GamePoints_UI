@@ -12,7 +12,8 @@
     <select name="date" id="date" style="display: block; margin: 0 auto;"></select>
     <table id="mrdaRankingPoints" class="display" width="100%"></table>
     <div id="config">
-        <label>Ratio Cap: </label><input id="ratio_cap" type="number" min="2" max="100"><br />
+        <label>Ratio Cap: </label><input id="ratio_cap" type="number" step='0.1' min="2" max="10"><br />
+        <label>Log Ratio Steepness (0 to disable log ratio): </label><input id="log_ratio_steepness" type="number" step='0.1' min="0" max="10"><br />
         <label>Exclude Playoffs in Final Calculation: </label><input id="exclude_playoffs_in_final_calc" type="checkbox"><br />
         <label>Calculate Averages every Wednesday: </label><input id="calc_every_wed" type="checkbox"><br />
     </div>
