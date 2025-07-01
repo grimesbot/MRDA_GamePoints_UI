@@ -121,7 +121,7 @@ class MrdaRankingPointsSystem {
         this.mrdaTeams[mrdaGame.awayTeamId].gameHistory.push(mrdaGame);
     }
 
-    calculateAverageRankingPoints(calcDate, finalCalc, teamIds, finalCalcDate) {
+    calculateAverageRankingPoints(calcDate, finalCalc, teamIds) {
         if (!teamIds) 
             teamIds = Object.keys(this.mrdaTeams);
 
@@ -140,14 +140,14 @@ class MrdaRankingPointsSystem {
 
                         //depricate playoffs per Active Status logic for final calculation. 
                         //Playoffs are last season, anything else in the rankings period is regular season.
-                        if (finalCalc)
+                        if (config.exclude_playoffs_in_final_calc && finalCalc)
                             return;
                     } else if (game.qualifier && ageDays >= 271) {
                         //qualifiers do not count for active status past 9 months
                         
                         //depricate playoffs per Active Status logic for final calculation.
                         //Playoffs are last season, anything else in the rankings period is regular season.
-                        if (finalCalc)
+                        if (config.exclude_playoffs_in_final_calc && finalCalc)
                             return;
                     } else if (game.forfeit 
                         && ((game.scores[game.homeTeamId] > 0 && game.homeTeamId == teamId) 
@@ -163,12 +163,12 @@ class MrdaRankingPointsSystem {
 
                 let gameRankingPoints = game.rankingPoints[teamId];
                 let weight = 1;
-                //if (new Date(game.date).getFullYear() < new Date(finalCalcDate).getFullYear())
+                //if (new Date(game.date).getFullYear() < new Date(calcDate).getFullYear())
                 //    weight = 0.1;
 
                 if (183 <= ageDays && ageDays < 270) {
                     weight = 0.5;
-                } else if (271 <= ageDays && ageDays < 365) {
+                } else if (271 <= ageDays) {
                     weight = 0.25;
                 }
 
@@ -185,7 +185,9 @@ class MrdaRankingPointsSystem {
     }
 
     updateRankings(groupedApiGames, calcDate) {        
-        groupedApiGames.forEach((gameGroup, sanctioningId) => {
+        let groupedGames = [...groupedApiGames.values()];
+        for (let i = 0; i < groupedGames.length; i++) {
+            let gameGroup = groupedGames[i];
             let playingTeamIds = [];
             let eventStartDate = null;
             let eventEndDate = null;
@@ -201,10 +203,28 @@ class MrdaRankingPointsSystem {
                     }
             });
 
-            this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds, calcDate);
+            this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds);
             gameGroup.forEach(game => this.calculateGameRankingPoints(game)); 
-            this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds, calcDate);
-        });
+            this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds);
+
+            if (config.calc_every_wed)
+            {
+                let searchDate = new Date(new Date(eventStartDate).toDateString());
+                searchDate.setDate(searchDate.getDate() + 1);
+                let endDate = null;
+                let nextEvent = groupedGames[i+1];
+                if (nextEvent)
+                    endDate = new Date(nextEvent[0].date);
+                else
+                    endDate = new Date(calcDate);
+
+                while (searchDate < endDate) {
+                    if (searchDate.getDay() == 3)
+                        this.calculateAverageRankingPoints(searchDate, false, null);
+                    searchDate.setDate(searchDate.getDate() + 1);
+                }
+            }
+        }
     }
 
     rankTeams() {
