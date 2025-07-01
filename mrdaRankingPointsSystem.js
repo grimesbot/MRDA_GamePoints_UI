@@ -223,6 +223,7 @@ class MrdaRankingPointsSystem {
                     }
             });
 
+            if (!eventStartDate) eventStartDate = gameGroup[0].date;
             this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds);
             gameGroup.forEach(game => this.calculateGameRankingPoints(game)); 
             this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds);

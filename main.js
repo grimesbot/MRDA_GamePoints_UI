@@ -127,7 +127,7 @@ function calculateAndDisplayRankings() {
 
     mrdaRankingPointSystem.updateRankings(groupedApiGames, $("#date").val());
 
-    mrdaRankingPointSystem.calculateAverageRankingPoints($("#date").val(), true, null, $("#date").val());
+    mrdaRankingPointSystem.calculateAverageRankingPoints($("#date").val(), true);
 
     mrdaRankingPointSystem.rankTeams();
 
