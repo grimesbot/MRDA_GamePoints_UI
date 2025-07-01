@@ -182,6 +182,26 @@ function calculateAndDisplayRankings() {
     }
 }
 
+function setupConfigInputs(changeCallback) {
+    $("#config input").each(function() {
+        let $this = $(this);
+        let val = config[$this.attr('id')];
+        if ($this.attr('type') == 'checkbox') {
+            $this.prop('checked', val);
+        } else {
+            $this.val(val);
+        }
+    }).on('change', function() {
+        let $this = $(this);
+        if ($this.attr('type') == 'checkbox') {
+            config[$this.attr('id')] = $this.prop('checked');
+        } else {
+            config[$this.attr('id')] = parseInt($this.val());
+        }
+        changeCallback();
+    });
+}
+
 
 async function main() {
 
@@ -190,6 +210,8 @@ async function main() {
     await buildTeamsAndGames();
 
     calculateAndDisplayRankings();
+
+    setupConfigInputs(calculateAndDisplayRankings);
 
     $("#date").on( "change", calculateAndDisplayRankings );
 }
