@@ -12,20 +12,21 @@ class ApiTeam {
         return leagueId + (charterType == 'primary' ? 'a' : 'b');
     }
 }
-const apiTeams = { "17404a": new ApiTeam("17404a","D.H.R. Men's Roller Derby", "primary", false, 200) };
+const apiTeams = { };
 
 class ApiGame {
-    constructor(date, homeTeamId, awayTeamId, homeTeamScore, awayTeamScore, forfeit, eventName, validated = true) {
+    constructor(date, homeTeamId, awayTeamId, homeTeamScore, awayTeamScore, forfeit = false, eventName = "", validated = true) {
         this.date = date;
         this.homeTeamId = homeTeamId;
         this.awayTeamId = awayTeamId;
         this.homeTeamScore = homeTeamScore;
         this.awayTeamScore = awayTeamScore;
-        this.forfeit = forfeit;
-        this.eventName = eventName;
-        this.championship = eventName && eventName.includes('Mens Roller Derby Association Championships');
-        this.qualifier = eventName && eventName.includes('Qualifier');
+        this.forfeit = forfeit ?? false;
+        this.eventName = eventName ?? "";
+        this.championship = this.eventName.includes('Mens Roller Derby Association Championships');
+        this.qualifier = this.eventName.includes('Qualifier');
         this.validated = validated;
+        this.excluded = false;
     }
 }
 const groupedApiGames = new Map();
@@ -89,7 +90,7 @@ async function buildTeamsAndGames() {
                 homeTeamId,
                 game.event.home_league_name,
                 game.event.home_league_charter, 
-                teamInfo[homeTeamId].distance_clause_applies, 
+                teamInfo[homeTeamId].distance_clause_applies == true, 
                 teamInfo[homeTeamId].initial_ranking);
         }
         let awayTeamId = ApiTeam.getTeamId(game.event.away_league, game.event.away_league_charter);
@@ -98,7 +99,7 @@ async function buildTeamsAndGames() {
                 awayTeamId,
                 game.event.away_league_name, 
                 game.event.away_league_charter, 
-                teamInfo[awayTeamId].distance_clause_applies, 
+                teamInfo[awayTeamId].distance_clause_applies  == true, 
                 teamInfo[awayTeamId].initial_ranking);
         }
     });

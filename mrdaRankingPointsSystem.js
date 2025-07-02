@@ -27,6 +27,7 @@ class MrdaTeam {
         this.ranking = null;
         this.rankingSort = null;
         this.postseasonEligible = false;
+        this.chart = false;
     }
 
     getAverageRankingPointHistory(date) {
@@ -195,7 +196,7 @@ class MrdaRankingPointsSystem {
 
             let playingTeamIds = [];
             gameGroup.forEach(game => {
-                if (daysDiff(game.date, calcDate) >= 0) {
+                if (daysDiff(game.date, calcDate) >= 0 && !game.excluded) {
                     if (!playingTeamIds.includes(game.homeTeamId)) 
                         playingTeamIds.push(game.homeTeamId);
                     if (!playingTeamIds.includes(game.awayTeamId)) 
@@ -205,7 +206,7 @@ class MrdaRankingPointsSystem {
 
             this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds);
             gameGroup.forEach(game => {
-                if (daysDiff(game.date, calcDate) >= 0)
+                if (daysDiff(game.date, calcDate) >= 0 && !game.excluded)
                     this.calculateGameRankingPoints(game)
                 }); 
             this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds);
@@ -246,6 +247,9 @@ class MrdaRankingPointsSystem {
             let team = sortedTeams[i];
             team.ranking = i + 1;
             team.rankingSort = i + 1;
+
+            if (team.ranking < 8)
+                team.chart = true;
 
             if (team.activeStatusGameCount >= 5 || team.distanceClauseApplies)
                 team.postseasonEligible = true;

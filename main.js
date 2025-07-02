@@ -145,6 +145,40 @@ function teamDetailsModal() {
 
 }
 
+function displayRankingChart(teams) {
+
+    let rankingChart = Chart.getChart("rankingsChart");
+    if (rankingChart != undefined) {
+        rankingChart.destroy();
+    }
+
+    let datasets = [];
+
+    Object.values(teams).sort((a, b) => a.rankingSort - b.rankingSort).forEach(team => {
+        if (team.chart) {
+            datasets.push({
+                label: team.teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " "),
+                data: Array.from(team.averageRankingPointsHistory, ([date, arp]) => ({ x: new Date(date), y: arp, label: date })),
+                showLine: true
+            });
+        }
+    });
+
+    rankingChart = new Chart(document.getElementById("rankingsChart"), {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                    }
+                }
+            }
+        });
+}
+
 function calculateAndDisplayRankings() {
 
     let mrdaRankingPointSystem = new MrdaRankingPointsSystem(apiTeams);
@@ -155,10 +189,13 @@ function calculateAndDisplayRankings() {
 
     mrdaRankingPointSystem.rankTeams();
 
+    displayRankingChart(mrdaRankingPointSystem.mrdaTeams);
+
     let regenerate = DataTable.isDataTable('#mrdaRankingPoints');
 
     if (regenerate)
         $('#mrdaRankingPoints').DataTable().clear().destroy();        
+    
 
     new DataTable('#mrdaRankingPoints', {
         columns: [
@@ -167,7 +204,8 @@ function calculateAndDisplayRankings() {
             { title: 'Team', data: 'teamName', className: 'dt-teamDetailsClick' },
             { title: 'Average Ranking Points', data: 'averageRankingPoints', render: function (data, type, full) { return data.toFixed(2); }, className: 'dt-teamDetailsClick' },
             { title: 'Games Count',  data: 'activeStatusGameCount', className: 'dt-teamDetailsClick'},
-            { title: 'Postseason Eligible', data: 'postseasonEligible', render: function (data, type, full) { return data ? 'Yes' : 'No'; }, className: 'dt-teamDetailsClick'}
+            { title: 'Postseason Eligible', data: 'postseasonEligible', render: function (data, type, full) { return data ? 'Yes' : 'No'; }, className: 'dt-teamDetailsClick'},
+            { title: "Chart", data: 'chart', render: function (data, type, full) { return "<input type='checkbox' class='chart' " + (data ? "checked" : "") + "></input>"; }}
         ],
         data: Object.values(mrdaRankingPointSystem.mrdaTeams),
         paging: false,
@@ -180,7 +218,17 @@ function calculateAndDisplayRankings() {
         ordering: {
             handler: false
         }
-    });        
+    });
+    
+    if (!regenerate) {
+        $("#mrdaRankingPointsContainer").on('change', 'input.chart', function (e) {
+            let tr = e.target.closest('tr');
+            let row = $('#mrdaRankingPoints').DataTable().row(tr);
+            let team = row.data();
+            team.chart = $(this).prop('checked');
+            displayRankingChart(mrdaRankingPointSystem.mrdaTeams);
+        });
+    }
 }
 
 function setupConfigInputs(changeCallback) {
@@ -203,6 +251,57 @@ function setupConfigInputs(changeCallback) {
     });
 }
 
+function setupApiGames() {
+    var apiGamesDt = new DataTable('#apiGames', {
+            columns: [
+                { title: "Date", name: 'date', data: 'date', render: getStandardDateString},
+                { title: "Home Team", data: 'homeTeamId', render: function (data) { return apiTeams[data].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " "); } },
+                { title: "Home Score", data: 'homeTeamScore', render: function(data, type, full) { return data + (full.forfeit ? "*" : ""); }},
+                { title: "Away Score", data: 'awayTeamScore', render: function(data, type, full) { return data + (full.forfeit ? "*" : ""); }} ,
+                { title: "Away Team", data: 'awayTeamId', render: function (data) { return apiTeams[data].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " "); } },
+                { title: "Event Name", data: 'eventName'},
+                { title: "Type", render: function (data, type, full) { return full.championship ? "Championship" : full.qualifier ? "Qualifier" : "Regular Season"; }},
+                { title: "Validated", data: 'validated'},
+                { title: "Excluded", render: function (data, type, full) { return "<input type='checkbox' class='excluded'></input>"; }}
+            ],
+            data: [...groupedApiGames.values()].flat(1),
+            lengthChange: false,
+            order: {
+                name: 'date',
+                dir: 'desc'
+            }
+        });
+
+    $("#apiGames").on('change', 'input.excluded', function (e) {
+        let tr = e.target.closest('tr');
+        let row = apiGamesDt.row(tr);
+        let game = row.data();
+        game.excluded = $(this).prop('checked');
+        calculateAndDisplayRankings();
+    });
+}
+
+function setupApiTeams() {
+    var apiTeamsDt = new DataTable('#apiTeams', {
+            columns: [
+                { title: "Team", data: 'teamName'},
+                { title: "Distance Clause Applies", data: 'distanceClauseApplies'},
+                { title: "Initial Ranking", data: 'initialRanking', render: function (data, type, full) { return "<div class='hiddenInitialRanking' style='display: none;'>" + data + "</div><input type='number' class='initialRanking' min='1' value='" + data + "'></input>"; }}
+            ],
+            data: Object.values(apiTeams),
+            lengthChange: false
+        });
+
+    $("#apiTeams").on('change', 'input.initialRanking', function (e) {
+        let tr = e.target.closest('tr');
+        let row = apiTeamsDt.row(tr);
+        let team = row.data();
+        team.initialRanking = $(this).val();
+        $(tr).find('.hiddenInitialRanking').val(team.initialRanking);
+        calculateAndDisplayRankings();
+    });
+}
+
 
 async function main() {
 
@@ -217,6 +316,10 @@ async function main() {
     setupConfigInputs(calculateAndDisplayRankings);
 
     teamDetailsModal();
+
+    setupApiGames();
+
+    setupApiTeams();
 
     $("#date").on( "change", calculateAndDisplayRankings );
 }
