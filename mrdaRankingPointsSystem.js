@@ -96,6 +96,25 @@ function weightedGeometricMean(weightedGameRankingPoints) {
     return Math.pow(productOfGrpsWithWeightExponent, (1/sumOfWeights));
 }
 
+function asympRatio(numerator, denominator) {
+    if (config.log_ratio_steepness <= 0 || config.ratio_cap <= 1)
+        return numerator/denominator;
+
+    let limit = config.ratio_cap; //must be greater than 1
+    let steepness = config.log_ratio_steepness //must be greater than 0
+
+    if (denominator == 0)
+        throw new Error('Divide by zero error');
+
+    let rawRatio = numerator / denominator;
+    let logRatio = Math.log(rawRatio);
+
+    //Increase steepness by scaling input to tanh
+    let squashedLog = Math.tanh(steepness * logRatio) * Math.log(limit);
+
+    return Math.exp(squashedLog);
+}
+
 class MrdaRankingPointsSystem {
     constructor(apiTeams) {
         this.mrdaTeams = {};
@@ -108,11 +127,11 @@ class MrdaRankingPointsSystem {
         let homeArp = this.mrdaTeams[mrdaGame.homeTeamId].averageRankingPoints;
         let awayArp = this.mrdaTeams[mrdaGame.awayTeamId].averageRankingPoints;
         
-        mrdaGame.expectedRatios[mrdaGame.homeTeamId] = homeArp/awayArp;
-        mrdaGame.expectedRatios[mrdaGame.awayTeamId] = awayArp/homeArp;
+        mrdaGame.expectedRatios[mrdaGame.homeTeamId] = asympRatio(homeArp,awayArp);
+        mrdaGame.expectedRatios[mrdaGame.awayTeamId] = asympRatio(awayArp,homeArp);
         if (!mrdaGame.forfeit) {
-            let homeScoreRatio = mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId];
-            let awayScoreRatio = mrdaGame.scores[mrdaGame.awayTeamId]/mrdaGame.scores[mrdaGame.homeTeamId];
+            let homeScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.homeTeamId],mrdaGame.scores[mrdaGame.awayTeamId]);
+            let awayScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.awayTeamId],mrdaGame.scores[mrdaGame.homeTeamId]);
 
             mrdaGame.rankingPoints[mrdaGame.homeTeamId] = homeArp * Math.min(3, ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]));
             mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * Math.min(3, ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]));
