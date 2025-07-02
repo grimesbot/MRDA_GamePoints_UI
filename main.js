@@ -53,72 +53,96 @@ function renderRatio (data)
     }
 }
 
-function generateTeamDetails(team) {
-    $("#" + team.teamId + "-title").text(team.teamName); 
-    $("#" + team.teamId + "-averageRankingPoints").text(team.averageRankingPoints.toFixed(2)); 
+function teamDetailsModal() {
+    var teamChart;
+    var teamGameHistoryDt;
+    let $teamDetailModal = $('#teamDetailModal');
 
-    new Chart(document.getElementById(team.teamId + "-chart"), {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Game Ranking Points',
-                data: Array.from(team.gameHistory, (game) => ({ 
-                    x: new Date(game.date), 
-                    y: game.rankingPoints[team.teamId], 
-                    label: getStandardDateString(game.date) + (game.homeTeamId == team.teamId ? 
-                        " vs. " + apiTeams[game.awayTeamId].teamName : " @ " + apiTeams[game.homeTeamId].teamName) })),
-                showLine: false
-            }, {
-                label: 'Average Ranking Points',
-                data: Array.from(team.averageRankingPointsHistory, ([date, arp]) => ({ x: new Date(date), y: arp, label: date })),
-                showLine: true
-            }],
-        },
-        options: {
-            scales: {
-                x: {
-                    type: 'time',
-                }
+    $('#mrdaRankingPointsContainer').on('click', 'td.dt-teamDetailsClick', function (e) {
+        let tr = e.target.closest('tr');
+        let row = $('#mrdaRankingPoints').DataTable().row(tr);
+        let team = row.data();
+
+        $('#teamName').text(team.teamName);
+        $('#teamAverageRankingPoints').text(team.averageRankingPoints.toFixed(2));
+
+        teamChart = new Chart(document.getElementById("teamChart"), {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Game Ranking Points',
+                    data: Array.from(team.gameHistory, (game) => ({ 
+                        x: new Date(game.date), 
+                        y: game.rankingPoints[team.teamId], 
+                        label: getStandardDateString(game.date) + (game.homeTeamId == team.teamId ? 
+                            " vs. " + apiTeams[game.awayTeamId].teamName : " @ " + apiTeams[game.homeTeamId].teamName) })),
+                    showLine: false
+                }, {
+                    label: 'Average Ranking Points',
+                    data: Array.from(team.averageRankingPointsHistory, ([date, arp]) => ({ x: new Date(date), y: arp, label: date })),
+                    showLine: true
+                }],
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            return context[0].raw.label;
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].raw.label;
+                            }
                         }
                     }
                 }
             }
-        }
+        });
+
+        teamGameHistoryDt = new DataTable('#teamGameHistory', {
+            columns: [
+                { name: 'date', data: 'date'},
+                { data: 'score' },
+                { data: 'expectedRatio', render: renderRatio},
+                { data: 'actualRatio', render: renderRatio},
+                { data: 'gameRankingPoints', render: function (data, type, full) { return data ? data.toFixed(2) : ""; }, className: 'border-left'},
+                { data: 'averageRankingPoints', render: function (data, type, full) { return data ? data.toFixed(2) : ""; }}
+            ],
+            data: Array.from(team.gameHistory, (game) => ({ 
+                date: getStandardDateString(game.date),
+                score: game.scores[team.teamId] + "-" + (game.homeTeamId == team.teamId ? 
+                    game.scores[game.awayTeamId] + " vs. " + apiTeams[game.awayTeamId].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " ") 
+                    : game.scores[game.homeTeamId] + " @ " + apiTeams[game.homeTeamId].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " ")),
+                expectedRatio: game.expectedRatios[team.teamId],
+                actualRatio: !game.forfeit ? asympRatio(game.scores[team.teamId],game.homeTeamId == team.teamId ? game.scores[game.awayTeamId] : game.scores[game.homeTeamId]) : "",
+                gameRankingPoints: game.rankingPoints[team.teamId],
+                averageRankingPoints: team.getAverageRankingPointHistory(game.date)
+            })),
+            lengthChange: false,
+            searching: false,
+            info: false,
+            order: {
+                name: 'date',
+                dir: 'desc'
+            },
+            ordering: {
+                handler: false
+            },
+        });
+
+        $teamDetailModal.modal('show');
     });
 
-    new DataTable('#' + team.teamId + "-games", {
-        columns: [
-            { name: 'date', title: 'Date', data: 'date' },
-            { title: 'Score', data: 'score' },
-            { title: 'Expected Ratio', data: 'expectedRatio', render: renderRatio },
-            { title: 'Actual Ratio',  data: 'actualRatio', render: renderRatio},
-            { title: 'Game Ranking Points', data: 'gameRankingPoints', render: function (data, type, full) { return data ? data.toFixed(2) : ""; }},
-            { title: 'Average Ranking Points', data: 'averageRankingPoints', render: function (data, type, full) { return data ? data.toFixed(2) : ""; }}
-        ],
-        data: Array.from(team.gameHistory, (game) => ({ 
-            date: getStandardDateString(game.date),
-            score: game.scores[team.teamId] + (game.homeTeamId == team.teamId ? 
-                " vs. " + game.scores[game.awayTeamId] + " " + apiTeams[game.awayTeamId].teamName 
-                : " @ " + game.scores[game.homeTeamId] + " " + apiTeams[game.homeTeamId].teamName),
-            expectedRatio: game.expectedRatios[team.teamId],
-            actualRatio: !game.forfeit ? game.scores[team.teamId]/(game.homeTeamId == team.teamId ? game.scores[game.awayTeamId] : game.scores[game.homeTeamId]) : "",
-            gameRankingPoints: game.rankingPoints[team.teamId],
-            averageRankingPoints: team.getAverageRankingPointHistory(game.date)
-        })),
-        lengthChange: false,
-        searching: false,
-        info: false,
-        order: {
-            name: 'date',
-            dir: 'desc'
-        },
-    });        
+    $teamDetailModal.on('hidden.bs.modal', function (event) {
+        $('#teamName').text('');
+        $('#teamAverageRankingPoints').text('');
+        teamChart.destroy();
+        teamGameHistoryDt.clear();
+        teamGameHistoryDt.destroy();
+    });
+
 }
 
 function calculateAndDisplayRankings() {
@@ -157,29 +181,6 @@ function calculateAndDisplayRankings() {
             handler: false
         }
     });        
-    if (!regenerate) {
-        $('#mrdaRankingPoints').on('click', 'td.dt-teamDetailsClick', function (e) {
-            let tr = e.target.closest('tr');
-            let row = $('#mrdaRankingPoints').DataTable().row(tr);
-    
-            if (row.child.isShown()) {
-                // This row is already open - close it
-                row.child.hide();
-            }
-            else {
-                //hide any others that are open
-                $("tr.dt-hasChild").each(function() {
-                    $('#mrdaRankingPoints').DataTable().row(this).child.hide();
-                })
-
-                let team = row.data();
-                // Open this row
-                row.child($("#teamDetailContent").html().replaceAll("teamId-", team.teamId + "-")).show();
-
-                generateTeamDetails(team);
-            }
-        });
-    }
 }
 
 function setupConfigInputs(changeCallback) {
@@ -205,6 +206,8 @@ function setupConfigInputs(changeCallback) {
 
 async function main() {
 
+    //document.documentElement.setAttribute('data-bs-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
     populateRankingDates();
 
     await buildTeamsAndGames();
@@ -212,6 +215,8 @@ async function main() {
     calculateAndDisplayRankings();
 
     setupConfigInputs(calculateAndDisplayRankings);
+
+    teamDetailsModal();
 
     $("#date").on( "change", calculateAndDisplayRankings );
 }

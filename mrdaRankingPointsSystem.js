@@ -188,14 +188,14 @@ class MrdaRankingPointsSystem {
         let groupedGames = [...groupedApiGames.values()];
         for (let i = 0; i < groupedGames.length; i++) {
             let gameGroup = groupedGames[i];
-            let playingTeamIds = [];
-            let eventStartDate = null;
-            let eventEndDate = null;
+            let eventStartDate = gameGroup[0].date;
+            if (daysDiff(eventStartDate, calcDate) < 0)
+                continue;
+            let eventEndDate = gameGroup[gameGroup.length - 1].date;
 
+            let playingTeamIds = [];
             gameGroup.forEach(game => {
                 if (daysDiff(game.date, calcDate) >= 0) {
-                    if (!eventStartDate) eventStartDate = game.date;
-                    eventEndDate = game.date;
                     if (!playingTeamIds.includes(game.homeTeamId)) 
                         playingTeamIds.push(game.homeTeamId);
                     if (!playingTeamIds.includes(game.awayTeamId)) 
@@ -204,7 +204,10 @@ class MrdaRankingPointsSystem {
             });
 
             this.calculateAverageRankingPoints(eventStartDate, false, playingTeamIds);
-            gameGroup.forEach(game => this.calculateGameRankingPoints(game)); 
+            gameGroup.forEach(game => {
+                if (daysDiff(game.date, calcDate) >= 0)
+                    this.calculateGameRankingPoints(game)
+                }); 
             this.calculateAverageRankingPoints(eventEndDate, false, playingTeamIds);
 
             if (config.calc_every_wed)
@@ -213,9 +216,8 @@ class MrdaRankingPointsSystem {
                 searchDate.setDate(searchDate.getDate() + 1);
                 let endDate = null;
                 let nextEvent = groupedGames[i+1];
-                if (nextEvent)
-                    endDate = new Date(nextEvent[0].date);
-                else
+                endDate = nextEvent ? new Date(nextEvent[0].date) : null;
+                if (!endDate || endDate > new Date(calcDate))
                     endDate = new Date(calcDate);
 
                 while (searchDate < endDate) {
