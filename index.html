@@ -1,29 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme>
 <head>
     <meta charset="UTF-8">
     <title>MRDA Game Points UI</title>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <h1 style="text-align: center">MRDA Rankings by Average Rankings Points</h1>
-    <select name="date" id="date" style="display: block; margin: 0 auto;"></select>
-    <table id="mrdaRankingPoints" class="display" width="100%"></table>
-    <div id="config">
-        <label>Ratio Cap: </label><input id="ratio_cap" type="number" min="2" max="100"><br />
-        <label>Exclude Playoffs in Final Calculation: </label><input id="exclude_playoffs_in_final_calc" type="checkbox"><br />
-        <label>Calculate Averages every Wednesday: </label><input id="calc_every_wed" type="checkbox"><br />
-    </div>
-    <div id="teamDetailContent" hidden>
-        <div style="padding-left: 5%; padding-right: 5%">
-            <h2 id="teamId-title" style="text-align: center"></h2>
-            <h3 style="text-align: center">Current Average Ranking Points: <span id="teamId-averageRankingPoints"></span></h3>
-            <canvas id="teamId-chart"></canvas>
-            <table id="teamId-games" class="display" width="100%"></table>
+    <div class="container">
+        <h1 style="text-align: center">MRDA Rankings by Average Rankings Points</h1>
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label for="date" class="col-form-label">Rankings Period:</label>
+            </div>
+            <div class="col-auto">
+                <select name="date" id="date" style="display: block; margin: 0 auto;"></select>
+            </div>
+            <div class="col-auto">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#configModal">
+                    Configuraton
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gamesModal">
+                    Games
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#teamsModal">
+                    Teams
+                </button>
+            </div>
         </div>
     </div>
+
+    <div id ="rankingsChartContainer" class="container-xxl" >
+        <canvas id="rankingsChart"></canvas>
+    </div>
+    
+    <div id ="mrdaRankingPointsContainer" class="container-xxl" >
+        <table id="mrdaRankingPoints" class="display" width="100%"></table>
+    </div>
+
+    <div id="teamDetailModal" class="modal fade" tabindex="-1" aria-labelledby="teamDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-fullscreen-xl-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="teamDetailModalLabel"><span id="teamName"></span></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 class="text-center">Current Average Ranking Points: <span style="font-weight: bold;" id="teamAverageRankingPoints"></span></h5>
+                    <canvas id="teamChart"></canvas>
+                    <table id="teamGameHistory" class="display" width="100%">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" width="15%">Date</th>
+                            <th rowspan="2">Score</th>
+                            <th colspan="2" class="text-center">Ratio</th>
+                            <th colspan="2" class="text-center border-left">Ranking Points</th>                            
+                        </tr>
+                        <tr>
+                            <th width="5%">Expected</th>
+                            <th width="5%">Actual</th>
+                            <th width="5%" class="border-left">Game</th>
+                            <th width="5%">Average</th>
+                        </tr>
+                    </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="configModalLabel">Configuraton</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="config" class="modal-body">
+                    <label>Ratio Cap: </label><input id="ratio_cap" type="number" min="2" max="100"><br />
+                    <label>Exclude Playoffs in Final Calculation: </label><input id="exclude_playoffs_in_final_calc" type="checkbox"><br />
+                    <label>Calculate Averages every Wednesday: </label><input id="calc_every_wed" type="checkbox"><br />
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="gamesModal" tabindex="-1" aria-labelledby="gamesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="gamesModalLabel">MRDA Games</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="games" class="modal-body">
+                    <table id="apiGames" class="display" width="100%"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="teamsModal" tabindex="-1" aria-labelledby="teamsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="teamsModalLabel">MRDA Teams</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="teams" class="modal-body">
+                    <table id="apiTeams" class="display" width="100%"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap/dist/js/bootstrap.min.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>

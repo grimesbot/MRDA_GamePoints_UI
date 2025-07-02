@@ -2,9 +2,6 @@
     cursor: pointer;
 }
 
-table.dataTable.display tbody tr.child {
-    background: white;
-}
-table.dataTable.display tbody tr table tr:hover {
-    background: none;
+.border-left {
+    border-left: 1px solid rgba(0, 0, 0, 0.3);
 }

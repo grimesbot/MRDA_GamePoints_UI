@@ -7,22 +7,26 @@ class ApiTeam {
     }
 
     static getTeamId(leagueId, charterType) {
+        if (!leagueId || !charterType)
+            return;
         return leagueId + (charterType == 'primary' ? 'a' : 'b');
     }
 }
-const apiTeams = { "17404a": new ApiTeam("17404a","D.H.R. Men's Roller Derby", "primary", false, 200) };
+const apiTeams = { };
 
 class ApiGame {
-    constructor(date, homeTeamId, awayTeamId, homeTeamScore, awayTeamScore, forfeit, eventName) {
+    constructor(date, homeTeamId, awayTeamId, homeTeamScore, awayTeamScore, forfeit = false, eventName = "", validated = true) {
         this.date = date;
         this.homeTeamId = homeTeamId;
         this.awayTeamId = awayTeamId;
         this.homeTeamScore = homeTeamScore;
         this.awayTeamScore = awayTeamScore;
-        this.forfeit = forfeit;
-        this.eventName = eventName;
-        this.championship = eventName && eventName.includes('Mens Roller Derby Association Championships');
-        this.qualifier = eventName && eventName.includes('Qualifier');
+        this.forfeit = forfeit ?? false;
+        this.eventName = eventName ?? "";
+        this.championship = this.eventName.includes('Mens Roller Derby Association Championships');
+        this.qualifier = this.eventName.includes('Qualifier');
+        this.validated = validated;
+        this.excluded = false;
     }
 }
 const groupedApiGames = new Map();
@@ -71,28 +75,31 @@ async function buildTeamsAndGames() {
     //get yet-to-be validated games from API
     let unvalidatedGames = await fetchGames(null, null, 4);
 
+    //get status3? yet-to-be validated games from API
+    let unvalidated3Games = await fetchGames(null, null, 3);
+
     //combine the unvalidated and validated games and sort by date
-    let apiGames = [...(validatedGames || []), ...(unvalidatedGames || [])].sort((a, b) => 
+    let apiGames = [...(validatedGames || []), ...(unvalidated3Games || []), ...(unvalidatedGames || [])].sort((a, b) => 
         new Date(a.event.game_datetime) - new Date(b.event.game_datetime));
 
     //build apiTeams from API response
     apiGames.forEach(game => {
         let homeTeamId = ApiTeam.getTeamId(game.event.home_league, game.event.home_league_charter);
-        if (!apiTeams[homeTeamId]) {
+        if (homeTeamId && !apiTeams[homeTeamId]) {
             apiTeams[homeTeamId] = new ApiTeam(
                 homeTeamId,
                 game.event.home_league_name,
                 game.event.home_league_charter, 
-                teamInfo[homeTeamId].distance_clause_applies, 
+                teamInfo[homeTeamId].distance_clause_applies == true, 
                 teamInfo[homeTeamId].initial_ranking);
         }
         let awayTeamId = ApiTeam.getTeamId(game.event.away_league, game.event.away_league_charter);
-        if (!apiTeams[awayTeamId]) {
+        if (awayTeamId && !apiTeams[awayTeamId]) {
             apiTeams[awayTeamId] = new ApiTeam(
                 awayTeamId,
                 game.event.away_league_name, 
                 game.event.away_league_charter, 
-                teamInfo[awayTeamId].distance_clause_applies, 
+                teamInfo[awayTeamId].distance_clause_applies  == true, 
                 teamInfo[awayTeamId].initial_ranking);
         }
     });
@@ -131,6 +138,13 @@ async function buildTeamsAndGames() {
 
     //add API games to groupedApiGames
     apiGames.forEach(game => {
+        //required fields
+        if (!game.event || !game.event.game_datetime 
+            || !game.event.home_league || !game.event.home_league_charter
+            || !game.event.away_league || !game.event.away_league_charter
+            || game.event.home_league_score == null || game.event.away_league_score == null)
+            return;
+
         if (!groupedApiGames.has(game.event.sanctioning_id)) {
             groupedApiGames.set(game.event.sanctioning_id, []);
         }
@@ -142,7 +156,8 @@ async function buildTeamsAndGames() {
             game.event.forfeit != 1 ? game.event.home_league_score : (game.event.forfeit_league == game.event.home_league ? 0 : 100),
             game.event.forfeit != 1 ? game.event.away_league_score : (game.event.forfeit_league == game.event.away_league ? 0 : 100),
             game.event.forfeit == 1,
-            game.sanctioning.event_name);
+            game.sanctioning ? game.sanctioning.event_name : null,
+            game.event.status == "7");
 
         groupedApiGames.get(game.event.sanctioning_id).push(apiGame);
     });
