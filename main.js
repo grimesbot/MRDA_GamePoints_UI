@@ -116,7 +116,7 @@ function teamDetailsModal() {
                     game.scores[game.awayTeamId] + " vs. " + apiTeams[game.awayTeamId].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " ") 
                     : game.scores[game.homeTeamId] + " @ " + apiTeams[game.homeTeamId].teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " ")),
                 expectedRatio: game.expectedRatios[team.teamId],
-                actualRatio: !game.forfeit ? asympRatio(game.scores[team.teamId],game.homeTeamId == team.teamId ? game.scores[game.awayTeamId] : game.scores[game.homeTeamId]) : "",
+                actualRatio: !game.forfeit ? game.scores[team.teamId]/(game.homeTeamId == team.teamId ? game.scores[game.awayTeamId] : game.scores[game.homeTeamId]) : "",
                 gameRankingPoints: game.rankingPoints[team.teamId],
                 averageRankingPoints: team.getAverageRankingPointHistory(game.date)
             })),
