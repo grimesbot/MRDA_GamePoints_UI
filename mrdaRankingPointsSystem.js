@@ -131,7 +131,12 @@ class MrdaRankingPointsSystem {
         
         mrdaGame.expectedRatios[mrdaGame.homeTeamId] = asympRatio(homeArp,awayArp);
         mrdaGame.expectedRatios[mrdaGame.awayTeamId] = asympRatio(awayArp,homeArp);
-        if (!mrdaGame.forfeit) {
+
+        if (!mrdaGame.forfeit 
+            && !(config.exclude_gp_over_cap 
+                && (homeArp/awayArp > config.ratio_cap || awayArp/homeArp > config.ratio_cap)
+                && (mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId] > config.ratio_cap || mrdaGame.scores[mrdaGame.awayTeamId]/mrdaGame.scores[mrdaGame.homeTeamId] > config.ratio_cap))
+        ) {
             let homeScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.homeTeamId],mrdaGame.scores[mrdaGame.awayTeamId]);
             let awayScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.awayTeamId],mrdaGame.scores[mrdaGame.homeTeamId]);
 
@@ -190,7 +195,8 @@ class MrdaRankingPointsSystem {
                     }
                 }
 
-                if (game.forfeit)
+                //do nothing if we don't have ranking points for the game. e.g. forfeits or exclude_gp_over_cap
+                if (!(teamId in game.rankingPoints))
                     return;
 
                 let gameRankingPoints = game.rankingPoints[teamId];
