@@ -267,7 +267,7 @@ class MrdaRankingPointsSystem {
             team.ranking = i + 1;
             team.rankingSort = i + 1;
 
-            if (team.ranking < 8)
+            if (team.ranking < 6)
                 team.chart = true;
 
             if (team.activeStatusGameCount >= 5 || team.distanceClauseApplies)

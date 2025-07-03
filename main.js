@@ -145,12 +145,18 @@ function teamDetailsModal() {
 
 }
 
-function displayRankingChart(teams) {
+function displayRankingChart(teams, calcDate) {
 
     let rankingChart = Chart.getChart("rankingsChart");
     if (rankingChart != undefined) {
         rankingChart.destroy();
     }
+
+    let dateCalc = calcDate ? new Date(calcDate) : new Date();
+    let dateMax = getStandardDateString(dateCalc);
+    dateCalc.setFullYear(dateCalc.getFullYear() - 1)
+    dateCalc.setDate(dateCalc.getDate() + 1);
+    let dateMin = getStandardDateString(dateCalc);
 
     let datasets = [];
 
@@ -158,7 +164,7 @@ function displayRankingChart(teams) {
         if (team.chart) {
             datasets.push({
                 label: team.teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " "),
-                data: Array.from(team.averageRankingPointsHistory, ([date, arp]) => ({ x: new Date(date), y: arp, label: date })),
+                data: Array.from(team.averageRankingPointsHistory, ([date, arp]) => ({ x: new Date(date), y: arp, teamName: team.teamName })),
                 showLine: true
             });
         }
@@ -173,6 +179,20 @@ function displayRankingChart(teams) {
                 scales: {
                     x: {
                         type: 'time',
+                        min: new Date(dateMin),
+                        max: new Date(dateMax)
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].raw.teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " ");
+                            },
+                            label: function(context) {
+                                return getStandardDateString(context.raw.x) + ": " + context.raw.y.toFixed(2);
+                            }
+                        }
                     }
                 }
             }
@@ -189,7 +209,7 @@ function calculateAndDisplayRankings() {
 
     mrdaRankingPointSystem.rankTeams();
 
-    displayRankingChart(mrdaRankingPointSystem.mrdaTeams);
+    displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
 
     let regenerate = DataTable.isDataTable('#mrdaRankingPoints');
 
@@ -226,7 +246,7 @@ function calculateAndDisplayRankings() {
             let row = $('#mrdaRankingPoints').DataTable().row(tr);
             let team = row.data();
             team.chart = $(this).prop('checked');
-            displayRankingChart(mrdaRankingPointSystem.mrdaTeams);
+            displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
         });
     }
 }
