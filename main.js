@@ -199,6 +199,14 @@ function displayRankingChart(teams, calcDate) {
         });
 }
 
+function averageFromArray(array) {
+    var total = 0;
+    for(var i = 0; i < array.length; i++) {
+        total += array[i];
+    }
+    return total / array.length;
+}
+
 function calculateAndDisplayRankings() {
 
     let mrdaRankingPointSystem = new MrdaRankingPointsSystem(apiTeams);
@@ -208,6 +216,9 @@ function calculateAndDisplayRankings() {
     mrdaRankingPointSystem.calculateAverageRankingPoints($("#date").val(), true, null, $("#date").val());
 
     mrdaRankingPointSystem.rankTeams();
+
+    $("#errorMarginAvg").text((averageFromArray(mrdaRankingPointSystem.errorMargins) * 100).toFixed(2));
+    $("#errorMarginUnderCapAvg").text((averageFromArray(mrdaRankingPointSystem.errorMarginsUnderCap) * 100).toFixed(2));
 
     displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
 
