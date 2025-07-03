@@ -235,8 +235,8 @@ function calculateAndDisplayRankings() {
             { title: 'Team', data: 'teamName', className: 'dt-teamDetailsClick' },
             { title: 'Average Ranking Points', data: 'averageRankingPoints', render: function (data, type, full) { return data.toFixed(2); }, className: 'dt-teamDetailsClick' },
             { title: 'Games Count',  data: 'activeStatusGameCount', className: 'dt-teamDetailsClick'},
-            { title: 'Postseason Eligible', data: 'postseasonEligible', render: function (data, type, full) { return data ? 'Yes' : 'No'; }, className: 'dt-teamDetailsClick'},
-            { title: "Chart", data: 'chart', render: function (data, type, full) { return "<input type='checkbox' class='chart' " + (data ? "checked" : "") + "></input>"; }}
+            { title: 'Postseason Eligible', data: 'postseasonEligible', render: function (data, type, full) { return data ? 'Yes' : 'No'; }},
+            { title: "Chart", data: 'chart', render: function (data, type, full) { return "<input type='checkbox' class='chart' " + (data ? "checked" : "") + "></input>"; }, className: 'dt-center'}
         ],
         data: Object.values(mrdaRankingPointSystem.mrdaTeams),
         paging: false,
