@@ -221,6 +221,9 @@ function calculateAndDisplayRankings() {
 
     $("#diffAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffs).toFixed(2));
     $("#diffUnderCapAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffsUnderCap).toFixed(2));
+    $("#ratioCapGames").text('Impacts ' + mrdaRankingPointSystem.ratioCapGames + ' games (' + ((mrdaRankingPointSystem.ratioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
+    $("#gpxGames").text('Impacts ' +mrdaRankingPointSystem.gpxGames + ' games (' + ((mrdaRankingPointSystem.gpxGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
+    $("#bothRatioCapGames").text('Impacts ' +mrdaRankingPointSystem.bothRatioCapGames + ' games (' + ((mrdaRankingPointSystem.bothRatioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
 
     displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
 

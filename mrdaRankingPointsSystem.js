@@ -117,6 +117,10 @@ class MrdaRankingPointsSystem {
         Object.keys(apiTeams).forEach(teamId => this.mrdaTeams[teamId] = new MrdaTeam(apiTeams[teamId]));
         this.expectedVsActualRatioDiffs = [];
         this.expectedVsActualRatioDiffsUnderCap = [];
+        this.totalGames = 0;
+        this.ratioCapGames = 0;
+        this.bothRatioCapGames = 0;
+        this.gpxGames = 0;
     }
 
     calculateGameRankingPoints(apiGame) {
@@ -128,26 +132,48 @@ class MrdaRankingPointsSystem {
         mrdaGame.expectedRatios[mrdaGame.homeTeamId] = asympRatio(homeArp,awayArp);
         mrdaGame.expectedRatios[mrdaGame.awayTeamId] = asympRatio(awayArp,homeArp);
 
-        if (!mrdaGame.forfeit 
-            && !(config.ratio_cap && config.exclude_gp_over_cap
-                && (homeArp/awayArp > config.ratio_cap || awayArp/homeArp > config.ratio_cap)
-                && (mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId] > config.ratio_cap || mrdaGame.scores[mrdaGame.awayTeamId]/mrdaGame.scores[mrdaGame.homeTeamId] > config.ratio_cap))
-        ) {
-            let homeScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.homeTeamId],mrdaGame.scores[mrdaGame.awayTeamId]);
-            let awayScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.awayTeamId],mrdaGame.scores[mrdaGame.homeTeamId]);
+        if (!mrdaGame.forfeit) {
+            
+            this.totalGames++;
+            
+            let rawHomeExpectedRatio = homeArp/awayArp;
+            let rawHomeActualRatio = mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId];
+            let rawAwayExpectedRatio = awayArp/homeArp;
+            let rawAwayActualRatio = mrdaGame.scores[mrdaGame.awayTeamId]/mrdaGame.scores[mrdaGame.homeTeamId];
 
-            mrdaGame.rankingPoints[mrdaGame.homeTeamId] = homeArp * (config.gpx_cap ? Math.min(config.gpx_cap, Math.max(1/config.gpx_cap, ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]))) 
-                                                                        : ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]));
-            mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * (config.gpx_cap ? Math.min(config.gpx_cap, Math.max(1/config.gpx_cap, ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId])))
-                                                                        : ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]));
+            if (config.ratio_cap && (rawHomeActualRatio > config.ratio_cap || rawAwayActualRatio > config.ratio_cap))
+                this.ratioCapGames++;
 
-            if (this.mrdaTeams[mrdaGame.homeTeamId].gameHistory.length >= 5 && this.mrdaTeams[mrdaGame.awayTeamId].gameHistory.length >= 5) {
-                let rawHomeExpectedRatio = homeArp/awayArp;
-                let rawHomeActualRatio = mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId];
-                let diff = Math.abs(rawHomeExpectedRatio - rawHomeActualRatio);
-                this.expectedVsActualRatioDiffs.push(diff);
-                if (rawHomeActualRatio < config.ratio_cap && rawHomeActualRatio > (1/config.ratio_cap))
-                    this.expectedVsActualRatioDiffsUnderCap.push(diff);
+            if (config.ratio_cap 
+                && ((rawHomeExpectedRatio > config.ratio_cap && rawHomeActualRatio > config.ratio_cap)
+                || (rawAwayExpectedRatio > config.ratio_cap && rawAwayActualRatio > config.ratio_cap)))
+                this.bothRatioCapGames++;
+
+            if(!(config.ratio_cap && config.exclude_gp_over_cap
+                && ((rawHomeExpectedRatio > config.ratio_cap && rawHomeActualRatio > config.ratio_cap)
+                || (rawAwayExpectedRatio > config.ratio_cap && rawAwayActualRatio > config.ratio_cap)))) {
+
+                let homeScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.homeTeamId],mrdaGame.scores[mrdaGame.awayTeamId]);
+                let awayScoreRatio = asympRatio(mrdaGame.scores[mrdaGame.awayTeamId],mrdaGame.scores[mrdaGame.homeTeamId]);
+
+                if (config.gpx_cap && (ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]) > config.gpx_cap
+                                    || ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]) > config.gpx_cap))
+                {
+                    mrdaGame.rankingPoints[mrdaGame.homeTeamId] = homeArp * Math.min(config.gpx_cap, Math.max(1/config.gpx_cap, ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId])));
+                    mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * Math.min(config.gpx_cap, Math.max(1/config.gpx_cap, ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId])));
+                    this.gpxGames++;
+                    //console.log("GPX Cap Game: " + mrdaGame.date + " " + this.mrdaTeams[mrdaGame.homeTeamId].teamName + " vs. " + this.mrdaTeams[mrdaGame.awayTeamId].teamName);
+                } else {
+                    mrdaGame.rankingPoints[mrdaGame.homeTeamId] = homeArp * ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]);
+                    mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]);                
+                }
+
+                if (this.mrdaTeams[mrdaGame.homeTeamId].gameHistory.length >= 5 && this.mrdaTeams[mrdaGame.awayTeamId].gameHistory.length >= 5) {
+                    let diff = Math.abs(rawHomeExpectedRatio - rawHomeActualRatio);
+                    this.expectedVsActualRatioDiffs.push(diff);
+                    if (config.ratio_cap && rawHomeActualRatio < config.ratio_cap && rawAwayActualRatio < config.ratio_cap)
+                        this.expectedVsActualRatioDiffsUnderCap.push(diff);
+                }
             }
         }
 
