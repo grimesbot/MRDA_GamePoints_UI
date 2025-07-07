@@ -115,8 +115,8 @@ class MrdaRankingPointsSystem {
     constructor(apiTeams) {
         this.mrdaTeams = {};
         Object.keys(apiTeams).forEach(teamId => this.mrdaTeams[teamId] = new MrdaTeam(apiTeams[teamId]));
-        this.errorMargins = [];
-        this.errorMarginsUnderCap = [];
+        this.expectedVsActualRatioDiffs = [];
+        this.expectedVsActualRatioDiffsUnderCap = [];
     }
 
     calculateGameRankingPoints(apiGame) {
@@ -144,11 +144,10 @@ class MrdaRankingPointsSystem {
             if (this.mrdaTeams[mrdaGame.homeTeamId].gameHistory.length >= 5 && this.mrdaTeams[mrdaGame.awayTeamId].gameHistory.length >= 5) {
                 let rawHomeExpectedRatio = homeArp/awayArp;
                 let rawHomeActualRatio = mrdaGame.scores[mrdaGame.homeTeamId]/mrdaGame.scores[mrdaGame.awayTeamId];
-                let accuracy = rawHomeExpectedRatio/rawHomeActualRatio;
-                let error = Math.abs(1 - accuracy);
-                this.errorMargins.push(error);
+                let diff = Math.abs(rawHomeExpectedRatio - rawHomeActualRatio);
+                this.expectedVsActualRatioDiffs.push(diff);
                 if (rawHomeActualRatio < config.ratio_cap && rawHomeActualRatio > (1/config.ratio_cap))
-                    this.errorMarginsUnderCap.push(error);
+                    this.expectedVsActualRatioDiffsUnderCap.push(diff);
             }
         }
 

@@ -219,8 +219,8 @@ function calculateAndDisplayRankings() {
 
     mrdaRankingPointSystem.rankTeams();
 
-    $("#errorMarginAvg").text((averageFromArray(mrdaRankingPointSystem.errorMargins) * 100).toFixed(2));
-    $("#errorMarginUnderCapAvg").text((averageFromArray(mrdaRankingPointSystem.errorMarginsUnderCap) * 100).toFixed(2));
+    $("#diffAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffs).toFixed(2));
+    $("#diffUnderCapAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffsUnderCap).toFixed(2));
 
     displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
 
