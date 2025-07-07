@@ -147,7 +147,7 @@ function teamDetailsModal() {
 
 }
 
-function displayRankingChart(teams, calcDate) {
+function displayRankingChart(teamsArray, calcDate) {
 
     let rankingChart = Chart.getChart("rankingsChart");
     if (rankingChart != undefined) {
@@ -162,7 +162,7 @@ function displayRankingChart(teams, calcDate) {
 
     let datasets = [];
 
-    Object.values(teams).sort((a, b) => a.rankingSort - b.rankingSort).forEach(team => {
+    teamsArray.sort((a, b) => a.rankingSort - b.rankingSort).forEach(team => {
         if (team.chart) {
             datasets.push({
                 label: team.teamName.replaceAll("Roller Derby", "").replaceAll("Derby", "").replaceAll("  ", " "),
@@ -225,7 +225,7 @@ function calculateAndDisplayRankings() {
     $("#gpxGames").text('Impacts ' +mrdaRankingPointSystem.gpxGames + ' games (' + ((mrdaRankingPointSystem.gpxGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
     $("#bothRatioCapGames").text('Impacts ' +mrdaRankingPointSystem.bothRatioCapGames + ' games (' + ((mrdaRankingPointSystem.bothRatioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
 
-    displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
+    displayRankingChart(Object.values(mrdaRankingPointSystem.mrdaTeams), $("#date").val());
 
     let regenerate = DataTable.isDataTable('#mrdaRankingPoints');
 
@@ -259,10 +259,11 @@ function calculateAndDisplayRankings() {
     if (!regenerate) {
         $("#mrdaRankingPointsContainer").on('change', 'input.chart', function (e) {
             let tr = e.target.closest('tr');
-            let row = $('#mrdaRankingPoints').DataTable().row(tr);
+            let dt = $('#mrdaRankingPoints').DataTable();
+            let row = dt.row(tr);
             let team = row.data();
             team.chart = $(this).prop('checked');
-            displayRankingChart(mrdaRankingPointSystem.mrdaTeams, $("#date").val());
+            displayRankingChart(dt.rows().data().toArray(), $("#date").val());
         });
     }
 }
