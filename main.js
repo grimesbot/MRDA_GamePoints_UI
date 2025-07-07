@@ -43,6 +43,8 @@ function renderRatio (data)
 { 
     if (data) {
         let rounded = data.toFixed(2);
+        if (!config.ratio_cap)
+            return rounded;
         if (data > config.ratio_cap)
             return rounded + " (" + config.ratio_cap.toFixed(2) + ")";
         if (data < 1/config.ratio_cap)
