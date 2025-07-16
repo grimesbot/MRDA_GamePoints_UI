@@ -333,7 +333,7 @@ function setupApiTeams() {
         let tr = e.target.closest('tr');
         let row = apiTeamsDt.row(tr);
         let team = row.data();
-        team.initialRanking = $(this).val();
+        team.initialRanking = parseInt($(this).val());
         $(tr).find('.hiddenInitialRanking').val(team.initialRanking);
         calculateAndDisplayRankings();
     });

@@ -200,14 +200,14 @@ class MrdaRankingPointsSystem {
 
                         //depricate playoffs per Active Status logic for final calculation. 
                         //Playoffs are last season, anything else in the rankings period is regular season.
-                        if (config.exclude_playoffs_in_final_calc && finalCalc)
+                        if (config.exclude_postseason_in_final_calc)
                             return;
                     } else if (game.qualifier && ageDays >= 271) {
                         //qualifiers do not count for active status past 9 months
                         
                         //depricate playoffs per Active Status logic for final calculation.
                         //Playoffs are last season, anything else in the rankings period is regular season.
-                        if (config.exclude_playoffs_in_final_calc && finalCalc)
+                        if (config.exclude_postseason_in_final_calc)
                             return;
                     } else if (game.forfeit 
                         && ((game.scores[game.homeTeamId] > 0 && game.homeTeamId == teamId) 
@@ -216,6 +216,13 @@ class MrdaRankingPointsSystem {
                     } else {
                         team.activeStatusGameCount ++;
                     }
+                }
+
+                if (config.postseason_game_decay) {
+                    if (game.championship && ageDays >= 183)
+                        return;
+                    if (game.qualifier && ageDays >= 271)
+                        return;
                 }
 
                 //do nothing if we don't have ranking points for the game. e.g. forfeits or exclude_gp_over_cap
