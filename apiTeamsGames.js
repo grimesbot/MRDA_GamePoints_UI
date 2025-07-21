@@ -91,7 +91,7 @@ async function buildTeamsAndGames() {
                 game.event.home_league_name,
                 game.event.home_league_charter, 
                 homeTeamId in teamInfo && teamInfo[homeTeamId].distance_clause_applies == true, 
-                homeTeamId in teamInfo ? teamInfo[homeTeamId].initial_rating : 100);
+                homeTeamId in teamInfo ? teamInfo[homeTeamId].initial_ranking : 100);
         }
         let awayTeamId = ApiTeam.getTeamId(game.event.away_league, game.event.away_league_charter);
         if (awayTeamId && !apiTeams[awayTeamId]) {
@@ -100,7 +100,7 @@ async function buildTeamsAndGames() {
                 game.event.away_league_name, 
                 game.event.away_league_charter, 
                 awayTeamId in teamInfo && teamInfo[awayTeamId].distance_clause_applies  == true, 
-                awayTeamId in teamInfo ? teamInfo[awayTeamId].initial_rating : 100);
+                awayTeamId in teamInfo ? teamInfo[awayTeamId].initial_ranking : 100);
         }
     });
 
