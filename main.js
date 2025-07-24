@@ -219,15 +219,13 @@ function calculateAndDisplayRankings() {
 
     mrdaRankingPointSystem.rankTeams();
 
-    $("#diffAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffs).toFixed(2));
-    $("#diffUnderCapAvg").text(averageFromArray(mrdaRankingPointSystem.expectedVsActualRatioDiffsUnderCap).toFixed(2));
     $("#ratioCapGames").text('Impacts ' + mrdaRankingPointSystem.ratioCapGames + ' games (' + ((mrdaRankingPointSystem.ratioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
     $("#gpxGames").text('Impacts ' + mrdaRankingPointSystem.gpxGames + ' games (' + ((mrdaRankingPointSystem.gpxGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
     $("#bothRatioCapGames").text('Impacts ' + mrdaRankingPointSystem.bothRatioCapGames + ' games (' + ((mrdaRankingPointSystem.bothRatioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
 
     let meal = averageFromArray(mrdaRankingPointSystem.absoluteLogErrors);
     let errorPct = (Math.exp(meal) - 1) * 100;
-    $('#pctErrorMeal').text(errorPct.toFixed(2));
+    $('#pctErrorMeal').text(errorPct.toFixed(2) + '%');
     
     displayRankingChart(Object.values(mrdaRankingPointSystem.mrdaTeams), $("#date").val());
 

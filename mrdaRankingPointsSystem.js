@@ -115,8 +115,6 @@ class MrdaRankingPointsSystem {
     constructor(apiTeams) {
         this.mrdaTeams = {};
         Object.keys(apiTeams).forEach(teamId => this.mrdaTeams[teamId] = new MrdaTeam(apiTeams[teamId]));
-        this.expectedVsActualRatioDiffs = [];
-        this.expectedVsActualRatioDiffsUnderCap = [];
         this.absoluteLogErrors = [];
         this.totalGames = 0;
         this.ratioCapGames = 0;
@@ -167,13 +165,6 @@ class MrdaRankingPointsSystem {
                 } else {
                     mrdaGame.rankingPoints[mrdaGame.homeTeamId] = homeArp * ratioCap(homeScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.homeTeamId]);
                     mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]);                
-                }
-
-                if (this.mrdaTeams[mrdaGame.homeTeamId].gameHistory.length >= 5 && this.mrdaTeams[mrdaGame.awayTeamId].gameHistory.length >= 5) {
-                    let diff = Math.abs(rawHomeExpectedRatio - rawHomeActualRatio);
-                    this.expectedVsActualRatioDiffs.push(diff);
-                    if (config.ratio_cap && rawHomeActualRatio < config.ratio_cap && rawAwayActualRatio < config.ratio_cap)
-                        this.expectedVsActualRatioDiffsUnderCap.push(diff);
                 }
 
                 if (new Date(mrdaGame.date).getFullYear() == 2025) {
