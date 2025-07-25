@@ -209,6 +209,12 @@ function averageFromArray(array) {
     return total / array.length;
 }
 
+function meanAbsoluteLogErrorPercent(absLogErrorArray) {
+    let meal = averageFromArray(absLogErrorArray);
+    let errorPct = (Math.exp(meal) - 1) * 100;
+    return errorPct.toFixed(2) + '%';
+}
+
 function calculateAndDisplayRankings() {
 
     let mrdaRankingPointSystem = new MrdaRankingPointsSystem(apiTeams);
@@ -223,9 +229,18 @@ function calculateAndDisplayRankings() {
     $("#gpxGames").text('Impacts ' + mrdaRankingPointSystem.gpxGames + ' games (' + ((mrdaRankingPointSystem.gpxGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
     $("#bothRatioCapGames").text('Impacts ' + mrdaRankingPointSystem.bothRatioCapGames + ' games (' + ((mrdaRankingPointSystem.bothRatioCapGames/mrdaRankingPointSystem.totalGames) * 100).toFixed(2) + '%)');
 
-    let meal = averageFromArray(mrdaRankingPointSystem.absoluteLogErrors);
-    let errorPct = (Math.exp(meal) - 1) * 100;
-    $('#pctErrorMeal').text(errorPct.toFixed(2) + '%');
+    if (mrdaRankingPointSystem.absoluteLogErrors.length > 0)
+    {
+        let $pctErrorDiv = $('#pctErrorMeal');
+        $pctErrorDiv.html("Percent Error using Mean Absolute Log Error: <br />");
+        if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q1.length > 0)
+            $pctErrorDiv.append("2025 Q1: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2025_Q1) + "<br />");
+        if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q2.length > 0)
+            $pctErrorDiv.append("2025 Q2: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2025_Q2) + "<br />");
+        if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q3.length > 0)
+            $pctErrorDiv.append("2025 Q3: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2025_Q3) + "<br />");
+        $pctErrorDiv.append("Total: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors));
+    }
     
     displayRankingChart(Object.values(mrdaRankingPointSystem.mrdaTeams), $("#date").val());
 

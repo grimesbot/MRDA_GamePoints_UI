@@ -111,11 +111,19 @@ function asympRatio(numerator, denominator) {
     return Math.exp(squashedLog);
 }
 
+const q4_2024_deadline = new Date (2024, 12 - 1, 4);
+const q1_2025_deadline = new Date (2025, 3 - 1, 5);
+const q2_2025_deadline = new Date (2025, 6 - 1, 4);
+const q3_2025_deadline = new Date (2025, 9 - 1, 3);
+
 class MrdaRankingPointsSystem {
     constructor(apiTeams) {
         this.mrdaTeams = {};
         Object.keys(apiTeams).forEach(teamId => this.mrdaTeams[teamId] = new MrdaTeam(apiTeams[teamId]));
         this.absoluteLogErrors = [];
+        this.absoluteLogErrors_2025_Q1 = [];
+        this.absoluteLogErrors_2025_Q2 = [];        
+        this.absoluteLogErrors_2025_Q3 = [];            
         this.totalGames = 0;
         this.ratioCapGames = 0;
         this.bothRatioCapGames = 0;
@@ -167,8 +175,17 @@ class MrdaRankingPointsSystem {
                     mrdaGame.rankingPoints[mrdaGame.awayTeamId] = awayArp * ratioCap(awayScoreRatio)/ratioCap(mrdaGame.expectedRatios[mrdaGame.awayTeamId]);                
                 }
 
-                if (new Date(mrdaGame.date).getFullYear() == 2025) {
-                    this.absoluteLogErrors.push(Math.abs(Math.log(rawHomeExpectedRatio/rawHomeActualRatio)));
+                let gameDate = new Date(mrdaGame.date);
+
+                if (gameDate > q4_2024_deadline) {
+                    let absLogError = Math.abs(Math.log(rawHomeExpectedRatio/rawHomeActualRatio));
+                    this.absoluteLogErrors.push(absLogError);
+                    if (q4_2024_deadline < gameDate && gameDate < q1_2025_deadline)
+                        this.absoluteLogErrors_2025_Q1.push(absLogError);
+                    if (q1_2025_deadline < gameDate && gameDate < q2_2025_deadline)
+                        this.absoluteLogErrors_2025_Q2.push(absLogError);
+                    if (q2_2025_deadline < gameDate && gameDate < q3_2025_deadline)
+                        this.absoluteLogErrors_2025_Q3.push(absLogError);
                 }
             }
         }
