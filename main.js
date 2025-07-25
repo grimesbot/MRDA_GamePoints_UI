@@ -15,7 +15,7 @@ function populateRankingDates() {
 
             let daysAge = daysDiff(searchDate,new Date());
 
-            if (daysAge <= 180 && daysAge >= -90) {
+            if (daysAge <= 365 && daysAge >= -90) {
                 let wedString = getStandardDateString(searchDate);
                 wednesdays.set(wedString, `Q${months.indexOf(month) + 1} ${year} (${wedString})`);
                 
@@ -233,6 +233,8 @@ function calculateAndDisplayRankings() {
     {
         let $pctErrorDiv = $('#pctErrorMeal');
         $pctErrorDiv.html("Percent Error using Mean Absolute Log Error: <br />");
+        if (mrdaRankingPointSystem.absoluteLogErrors_2024_Q4.length > 0)
+            $pctErrorDiv.append("2024 Q4: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2024_Q4) + "<br />");        
         if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q1.length > 0)
             $pctErrorDiv.append("2025 Q1: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2025_Q1) + "<br />");
         if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q2.length > 0)
