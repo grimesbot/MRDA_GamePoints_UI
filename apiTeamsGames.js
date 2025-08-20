@@ -72,11 +72,14 @@ async function buildTeamsAndGames() {
     //get all validated games from API
     let validatedGames = await fetchGames();
 
-    //get yet-to-be validated games from API
-    let unvalidatedGames = await fetchGames(null, null, 4);
+    let unvalidatedMinDt = new Date();
+    unvalidatedMinDt.setDate(unvalidatedMinDt.getDate() - 60);
 
-    //get status3? yet-to-be validated games from API
-    let unvalidated3Games = await fetchGames(null, null, 3);
+    //get yet-to-be validated Approved games from API
+    let unvalidated3Games = await fetchGames(unvalidatedMinDt, null, 3);
+
+    //get yet-to-be validated Waiting for Documents games from API
+    let unvalidatedGames = await fetchGames(unvalidatedMinDt, null, 4);
 
     //combine the unvalidated and validated games and sort by date
     let apiGames = [...(validatedGames || []), ...(unvalidated3Games || []), ...(unvalidatedGames || [])].sort((a, b) => 
