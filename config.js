@@ -1,6 +1,6 @@
 const config = {
     "ratio_cap": 3,
-    "log_ratio_steepness": 2,
+    "log_ratio_steepness": 0,
     "gpx_cap": 3,    
     "postseason_game_decay": false,
     "exclude_postseason_in_final_calc": false,

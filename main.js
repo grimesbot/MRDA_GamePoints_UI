@@ -232,9 +232,7 @@ function calculateAndDisplayRankings() {
     if (mrdaRankingPointSystem.absoluteLogErrors.length > 0)
     {
         let $pctErrorDiv = $('#pctErrorMeal');
-        $pctErrorDiv.html("Percent Error using Mean Absolute Log Error: <br />");
-        if (mrdaRankingPointSystem.absoluteLogErrors_2024_Q4.length > 0)
-            $pctErrorDiv.append("2024 Q4: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2024_Q4) + "<br />");        
+        $pctErrorDiv.html("Percent Error using Mean Absolute Log Error: <br />");  
         if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q1.length > 0)
             $pctErrorDiv.append("2025 Q1: " + meanAbsoluteLogErrorPercent(mrdaRankingPointSystem.absoluteLogErrors_2025_Q1) + "<br />");
         if (mrdaRankingPointSystem.absoluteLogErrors_2025_Q2.length > 0)
